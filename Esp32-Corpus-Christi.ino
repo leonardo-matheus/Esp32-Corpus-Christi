@@ -6,50 +6,51 @@
 // Sensor MPU6050
 Adafruit_MPU6050 mpu;
 
-// Gamepad BLE
+// BLE Gamepad
 BleGamepad bleGamepad;
 
 void setup() {
+  // Inicializa a comunicação serial para debug
   Serial.begin(115200);
   while (!Serial) delay(10); // Aguarda o monitor serial
 
-  // Inicializa o MPU6050
-  if (!mpu.begin()) {
-    Serial.println("Falha ao encontrar o MPU6050!");
-    while (1);
-  }
-  Serial.println("MPU6050 inicializado com sucesso!");
-
-  // Configura o MPU6050
-  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);
-  mpu.setGyroRange(MPU6050_RANGE_250_DEG);
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-
-  // Inicializa o gamepad BLE
+  // Inicializa o BLE Gamepad
+  Serial.println("Inicializando Gamepad BLE...");
   bleGamepad.begin();
-  Serial.println("Gamepad BLE inicializado. Aguardando conexão...");
+  Serial.println("Gamepad BLE inicializado! Aguardando conexão...");
+
+  // Inicializa o sensor MPU6050
+  Serial.println("Inicializando MPU6050...");
+  if (!mpu.begin()) {
+    Serial.println("Falha ao inicializar MPU6050!");
+    while (1); // Trava aqui se houver falha no MPU6050
+  }
+  Serial.println("MPU6050 inicializado!");
+
+  // Configurações do MPU6050
+  mpu.setAccelerometerRange(MPU6050_RANGE_2_G);  // Configura a faixa do acelerômetro
+  mpu.setGyroRange(MPU6050_RANGE_250_DEG);       // Configura a faixa do giroscópio
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);    // Redução de ruídos no sensor
+
+  Serial.println("Setup concluído! Aguardando conexão BLE...");
 }
 
 void loop() {
-  // Verifica se o gamepad está conectado
+  // Verifica se o Gamepad BLE está conectado
   if (bleGamepad.isConnected()) {
-    // Lê os dados do acelerômetro
+    // Lê os dados do sensor MPU6050
     sensors_event_t accel, gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
 
-    // Mapeia os valores do acelerômetro para os eixos do gamepad
+    // Mapeia os valores do acelerômetro para os eixos do Gamepad (-32768 a 32767)
+    int16_t xAxis = map(accel.acceleration.x * 100, -2000, 2000, -32768, 32767);
+    int16_t yAxis = map(accel.acceleration.y * 100, -2000, 2000, -32768, 32767);
+    int16_t zAxis = map(accel.acceleration.z * 100, -2000, 2000, -32768, 32767);
 
-    //Definir OffSet ao iniciar
-    int16_t xAxis = map(accel.acceleration.x * 100, -2000, 2000, -32768, 32767); // Eixo X
-    int16_t yAxis = map(accel.acceleration.y * 100, -2000, 2000, -32768, 32767); // Eixo Y
-    int16_t zAxis = map(accel.acceleration.z * 100, -2000, 2000, -32768, 32767); // Eixo Z
-
-    //Configurar eixos de rotação XYZ
-
-    // Define os eixos do gamepad
+    // Define os eixos no Gamepad
     bleGamepad.setAxes(xAxis, yAxis, zAxis);
 
-    // Debug no Serial Monitor
+    // Debug no monitor serial
     Serial.print("Acelerômetro (m/s^2): X=");
     Serial.print(accel.acceleration.x);
     Serial.print(", Y=");
@@ -63,6 +64,8 @@ void loop() {
     Serial.print(yAxis);
     Serial.print(", Z=");
     Serial.println(zAxis);
+  } else {
+    Serial.println("Aguardando conexão BLE...");
   }
 
   delay(100); // Ajuste o delay conforme necessário
