@@ -1,0 +1,11 @@
+[package]
+name = "tapete_virtual"
+version = "0.1.0"
+edition = "2021"
+
+# Descrição do projeto
+description = "Experiência imersiva de audiovisual expandido com controle via ESP32"
+license = "MIT"
+
+[dependencies]
+bevy = "0.13"
